@@ -1,4 +1,4 @@
-# Vibe Your Mind - 项目状态报告
+ # Vibe Your Mind - 项目状态报告
 
 **更新时间**: 2026-01-08  
 **当前版本**: Beta v1.0  
@@ -187,7 +187,7 @@ VITE_SUPABASE_URL=https://mvelccpalgarnettbstt.supabase.co
 VITE_SUPABASE_ANON_KEY=sb_publishable_zZFNtytYj6qQ9c2GLiG67Q_2Uogt7_a
 
 # DeepSeek API
-VITE_DEEPSEEK_API_KEY=sk-71795c0b477c4286bec4e3aa75e396ff
+
 ```
 
 ### 数据库状态
