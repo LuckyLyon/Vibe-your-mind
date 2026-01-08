@@ -1,32 +1,36 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Button } from './Button';
 import { X, Fingerprint, Zap, Key, UserPlus, LogIn, AlertCircle } from 'lucide-react';
-import { User } from '../types';
+import { useAuth } from '../hooks/useAuth';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: (user: User) => void;
 }
 
 type AuthMode = 'login' | 'register';
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+  const { signUp, signIn } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [formData, setFormData] = useState({
+    email: '',
     username: '',
     password: ''
   });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Reset state when opening
   useEffect(() => {
     if (isOpen) {
       setMode('login');
-      setFormData({ username: '', password: '' });
+      setFormData({ email: '', username: '', password: '' });
       setError(null);
+      setSuccessMessage(null);
     }
   }, [isOpen]);
 
@@ -34,63 +38,51 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(null); // Clear error on type
+    setError(null);
+    setSuccessMessage(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.username.trim() || !formData.password.trim()) {
-      setError("请输入用户名和密码");
-      return;
+    // 验证输入
+    if (mode === 'register') {
+      if (!formData.email.trim() || !formData.username.trim() || !formData.password.trim()) {
+        setError("请填写所有字段");
+        return;
+      }
+      if (formData.password.length < 6) {
+        setError("密码长度至少 6 位");
+        return;
+      }
+    } else {
+      if (!formData.email.trim() || !formData.password.trim()) {
+        setError("请输入邮箱和密码");
+        return;
+      }
     }
 
     setIsLoading(true);
     setError(null);
 
-    // Simulate Network Delay
-    setTimeout(() => {
-      const dbUsers = JSON.parse(localStorage.getItem('vibe_db_users') || '[]');
-
+    try {
       if (mode === 'register') {
-        // --- REGISTER LOGIC ---
-        if (dbUsers.find((u: any) => u.username.toLowerCase() === formData.username.trim().toLowerCase())) {
-           setError("该代号已被占用，请换一个。");
-           setIsLoading(false);
-           return;
-        }
-
-        const newUser: User = {
-          id: Date.now().toString(),
-          username: formData.username.trim(),
-          role: 'Viber',
-          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.username}`
-        };
-
-        // Save to "DB" with password
-        const dbEntry = { ...newUser, password: formData.password };
-        localStorage.setItem('vibe_db_users', JSON.stringify([...dbUsers, dbEntry]));
-
-        onLogin(newUser);
-        onClose();
+        await signUp(formData.email, formData.password, formData.username);
+        setSuccessMessage("注册成功!请检查邮箱验证链接。");
+        setTimeout(() => {
+          setMode('login');
+          setSuccessMessage(null);
+        }, 3000);
       } else {
-        // --- LOGIN LOGIC ---
-        const userFound = dbUsers.find((u: any) => 
-            u.username.toLowerCase() === formData.username.trim().toLowerCase() && 
-            u.password === formData.password
-        );
-
-        if (userFound) {
-            // Strip password before returning to app state
-            const { password, ...safeUser } = userFound;
-            onLogin(safeUser);
-            onClose();
-        } else {
-            setError("代号不存在或密码错误。");
-        }
+        await signIn(formData.email, formData.password);
+        onClose();
       }
+    } catch (err: any) {
+      console.error('Auth error:', err);
+      setError(err.message || '操作失败,请重试');
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -146,19 +138,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
                </div>
            )}
 
+           {successMessage && (
+               <div className="mb-4 bg-green-100 border-2 border-black p-3 flex items-start gap-2 animate-in slide-in-from-top-2">
+                   <Zap className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                   <p className="text-sm font-bold text-green-600 leading-tight">{successMessage}</p>
+               </div>
+           )}
+
            <div className="space-y-4">
              <div>
-               <label className="block font-black uppercase text-sm mb-1">代号 (Username)</label>
+               <label className="block font-black uppercase text-sm mb-1">邮箱 (Email)</label>
                <input 
                  autoFocus
-                 type="text" 
-                 name="username"
-                 value={formData.username}
+                 type="email" 
+                 name="email"
+                 value={formData.email}
                  onChange={handleInputChange}
                  className="w-full border-4 border-black p-3 font-bold text-lg focus:outline-none focus:ring-4 focus:ring-yellow-400 bg-gray-50 placeholder-gray-400"
-                 placeholder="例如: Neo_Coder"
+                 placeholder="your@email.com"
                />
              </div>
+
+             {mode === 'register' && (
+               <div>
+                 <label className="block font-black uppercase text-sm mb-1">代号 (Username)</label>
+                 <input 
+                   type="text" 
+                   name="username"
+                   value={formData.username}
+                   onChange={handleInputChange}
+                   className="w-full border-4 border-black p-3 font-bold text-lg focus:outline-none focus:ring-4 focus:ring-yellow-400 bg-gray-50 placeholder-gray-400"
+                   placeholder="例如: Neo_Coder"
+                 />
+               </div>
+             )}
              
              <div>
                <label className="block font-black uppercase text-sm mb-1">密钥 (Password)</label>
@@ -184,8 +197,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
              </Button>
              
              {mode === 'login' && (
-                 <p className="text-center text-xs font-bold text-gray-400 mt-2 cursor-pointer hover:text-black">
-                     忘记密钥? 没办法，重新注册一个吧。
+                 <p className="text-center text-xs font-bold text-gray-400 mt-2">
+                     忘记密钥? 请联系管理员。
                  </p>
              )}
            </div>
@@ -194,3 +207,4 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
     </div>
   );
 };
+

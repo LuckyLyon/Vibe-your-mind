@@ -1,0 +1,20 @@
+# EdgeOne Pages 部署配置
+name: vibe-your-mind
+framework: vite
+
+# 构建配置
+build:
+  command: npm run build
+  output: dist
+  environment:
+    NODE_VERSION: "18"
+
+# 环境变量(需要在 EdgeOne Pages 控制台配置)
+# - VITE_SUPABASE_URL
+# - VITE_SUPABASE_ANON_KEY
+# - VITE_GEMINI_API_KEY
+
+# 路由配置
+routes:
+  - src: /(.*)
+    dest: /index.html

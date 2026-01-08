@@ -19,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, setPage, currentUse
     { id: PageView.HOME, label: '首页' },
     { id: PageView.BEGINNERS, label: '小白入门' },
     { id: PageView.IDEA_UNIVERSE, label: 'Idea 宇宙' },
+    { id: PageView.CHAT, label: '聊天室' },
     { id: PageView.PROMPT_VINYLS, label: '提示词黑胶', icon: <Disc className="w-4 h-4 mr-1 inline" /> },
     { id: PageView.BOUNTY_HUNTERS, label: '赏金猎人' },
     { id: PageView.FEATURED, label: '精品项目' },

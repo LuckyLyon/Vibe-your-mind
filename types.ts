@@ -5,6 +5,7 @@ export enum PageView {
   IDEA_UNIVERSE = 'IDEA_UNIVERSE',
   IDEA_DETAIL = 'IDEA_DETAIL',
   BOUNTY_HUNTERS = 'BOUNTY_HUNTERS',
+  CHAT = 'CHAT',
   FEATURED = 'FEATURED',
   PROMPT_VINYLS = 'PROMPT_VINYLS'
 }
@@ -51,6 +52,7 @@ export interface Idea {
   description: string;
   tags: string[];
   likes: number;
+  commentsCount?: number; // 评论总数(从数据库获取)
   hasPrototype: boolean;
   demoUrl?: string;
   status: 'concept' | 'in-progress' | 'live';
